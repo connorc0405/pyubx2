@@ -57,7 +57,7 @@ class UBXMessage:
         self._checksum = b""
 
         if mode not in (0, 1, 2):
-            raise ube.UBXMessageError(f"Invalid mode {mode} - must be 0, 1 or 2")
+            raise ube.UBXMessageError("Invalid mode " + mode + " - must be 0, 1 or 2")
 
         # accommodate different formats of msgClass and msgID
         if isinstance(ubxClass, str) and isinstance(
@@ -102,15 +102,15 @@ class UBXMessage:
         except (
             AttributeError,
             OverflowError,
-            struct.error,
+            Exception,
             TypeError,
             ValueError,
         ) as err:
             raise ube.UBXTypeError(
                 (
-                    f"Incorrect type for attribute '{key}' "
-                    f"in {['GET', 'SET', 'POLL'][self._mode]} message "
-                    f"class {self.identity}"
+                    "Incorrect type for attribute '" + key + "' "
+                    "in " + ['GET', 'SET', 'POLL'][self._mode] + " message "
+                    "class " + self.identity
                 )
             ) from err
 
@@ -258,7 +258,7 @@ class UBXMessage:
         while offset < cfglen:
             if i == KEYLEN:
                 key = int.from_bytes(
-                    self._payload[offset : offset + KEYLEN], "little", signed=False
+                    self._payload[offset : offset + KEYLEN], "little", False
                 )
                 (keyname, att) = self.cfgkey2name(key)
                 atts = attsiz(att)
@@ -525,9 +525,9 @@ class UBXMessage:
 
         umsg_name = self.identity
         if self.payload is None:
-            return f"<UBX({umsg_name})>"
+            return "<UBX(" + umsg_name + ")>"
 
-        stg = f"<UBX({umsg_name}, "
+        stg = "<UBX(" + umsg_name + ", "
         for i, att in enumerate(self.__dict__):
             if att[0] != "_":  # only show public attributes
                 val = self.__dict__[att]
@@ -570,8 +570,8 @@ class UBXMessage:
         """
 
         if self._payload is None:
-            return f"UBXMessage({self._ubxClass}, {self._ubxID}, {self._mode})"
-        return f"UBXMessage({self._ubxClass}, {self._ubxID}, {self._mode}, payload={self._payload})"
+            return "UBXMessage(" + self._ubxClass + ", " + self._ubxID + ", " + self._mode + ")"
+        return "UBXMessage(" + self._ubxClass + ", " + self._ubxID + ", " + self._mode + ", payload=" + self._payload + ")"
 
     def __setattr__(self, name, value):
         """
@@ -585,7 +585,7 @@ class UBXMessage:
 
         if self._immutable:
             raise ube.UBXMessageError(
-                f"Object is immutable. Updates to {name} not permitted after initialisation."
+                "Object is immutable. Updates to " + name + " not permitted after initialisation."
             )
 
         super().__setattr__(name, value)
@@ -627,7 +627,7 @@ class UBXMessage:
                 umsg_name = ubt.UBX_MSGIDS[self._ubxClass + self._ubxID]
         except KeyError as err:
             raise ube.UBXMessageError(
-                f"Unknown UBX message type class {self._ubxClass} id {self._ubxID}"
+                "Unknown UBX message type class " + self._ubxClass + " id " + self._ubxID
             ) from err
         return umsg_name
 
@@ -713,7 +713,7 @@ class UBXMessage:
             return (clsid, msgid)
         except KeyError as err:
             raise ube.UBXMessageError(
-                f"Undefined message, class {msgClass}, id {msgID}"
+                "Undefined message, class " + msgClass + ", id " + msgID
             ) from err
 
     @staticmethod
@@ -735,15 +735,15 @@ class UBXMessage:
         if atttyp(att) in ("C", "X"):  # byte or char
             valb = val
         elif atttyp(att) in ("E", "L", "U"):  # unsigned integer
-            valb = val.to_bytes(atts, byteorder="little", signed=False)
+            valb = val.to_bytes(atts, "little", False)
         elif atttyp(att) == "I":  # signed integer
-            valb = val.to_bytes(atts, byteorder="little", signed=True)
+            valb = val.to_bytes(atts, "little", True)
         elif att == ubt.R4:  # single precision floating point
             valb = struct.pack("<f", val)
         elif att == ubt.R8:  # double precision floating point
             valb = struct.pack("<d", val)
         else:
-            raise ube.UBXTypeError(f"Unknown attribute type {att}")
+            raise ube.UBXTypeError("Unknown attribute type " + att)
         return valb
 
     @staticmethod
@@ -764,15 +764,15 @@ class UBXMessage:
         elif atttyp(att) in ("X", "C"):
             val = valb
         elif atttyp(att) in ("E", "L", "U"):  # unsigned integer
-            val = int.from_bytes(valb, "little", signed=False)
+            val = int.from_bytes(valb, "little", False)
         elif atttyp(att) == "I":  # signed integer
-            val = int.from_bytes(valb, "little", signed=True)
+            val = int.from_bytes(valb, "little", True)
         elif att == ubt.R4:  # single precision floating point
             val = struct.unpack("<f", valb)[0]
         elif att == ubt.R8:  # double precision floating point
             val = struct.unpack("<d", valb)[0]
         else:
-            raise ube.UBXTypeError(f"Unknown attribute type {att}")
+            raise ube.UBXTypeError("Unknown attribute type " + att)
         return val
 
     @staticmethod
@@ -796,7 +796,7 @@ class UBXMessage:
         elif atttyp(att) in ("E", "I", "L", "U"):
             val = 0
         else:
-            raise ube.UBXTypeError(f"Unknown attribute type {att}")
+            raise ube.UBXTypeError("Unknown attribute type " + att)
         return val
 
     @staticmethod
@@ -815,7 +815,7 @@ class UBXMessage:
             return ubcdb.UBX_CONFIG_DATABASE[name]
         except KeyError as err:
             raise ube.UBXMessageError(
-                f"Undefined configuration database key {name}"
+                "Undefined configuration database key " + name
             ) from err
 
     @staticmethod
@@ -836,7 +836,7 @@ class UBXMessage:
             (kid, typ) = val
             if keyID == kid:
                 return (key, typ)
-        raise ube.UBXMessageError(f"Undefined configuration database key {hex(keyID)}")
+        raise ube.UBXMessageError("Undefined configuration database key " + hex(keyID))
 
     @staticmethod
     def config_set(layers: int, transaction: int, cfgData: list) -> object:
@@ -857,7 +857,7 @@ class UBXMessage:
         num = len(cfgData)
         if num > 64:
             raise ube.UBXMessageError(
-                f"Number of configuration tuples {num} exceeds maximum of 64"
+                "Number of configuration tuples " + num + " exceeds maximum of 64"
             )
 
         version = UBXMessage.val2bytes(0 if transaction == 0 else 1, ubt.U1)
@@ -900,7 +900,7 @@ class UBXMessage:
         num = len(keys)
         if num > 64:
             raise ube.UBXMessageError(
-                f"Number of configuration keys {num} exceeds maximum of 64"
+                "Number of configuration keys " + num + " exceeds maximum of 64"
             )
 
         version = UBXMessage.val2bytes(0 if transaction == 0 else 1, ubt.U1)
@@ -936,7 +936,7 @@ class UBXMessage:
         num = len(keys)
         if num > 64:
             raise ube.UBXMessageError(
-                f"Number of configuration keys {num} exceeds maximum of 64"
+                "Number of configuration keys " + num + " exceeds maximum of 64"
             )
 
         version = UBXMessage.val2bytes(0, ubt.U1)

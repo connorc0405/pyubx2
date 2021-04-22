@@ -55,7 +55,7 @@ class UBXReader:
 
         if msgmode not in (0, 1, 2):
             raise ube.UBXStreamError(
-                f"Invalid stream mode {msgmode} - must be 0, 1 or 2"
+                "Invalid stream mode " + msgmode + " - must be 0, 1 or 2"
             )
 
         self._stream = stream
@@ -117,7 +117,7 @@ class UBXReader:
                 clsid = byten[0:1]
                 msgid = byten[1:2]
                 lenb = byten[2:4]
-                leni = int.from_bytes(lenb, "little", signed=False)
+                leni = int.from_bytes(lenb, "little", False)
                 byten = self._stream.read(leni + 2)
                 if len(byten) < leni + 2:  # EOF
                     break
@@ -134,7 +134,7 @@ class UBXReader:
                 if self._ubx_only:  # raise error and quit
                     nmeawarn = NMEAMSG if is_nmea else ""
                     raise ube.UBXStreamError(
-                        f"Unknown data header {prevbyte + byte1}. {nmeawarn}"
+                        "Unknown data header " + prevbyte + byte1 + ". " + nmeawarn
                     )
 
         return (raw_data, parsed_data)
@@ -168,7 +168,7 @@ class UBXReader:
 
         if msgmode not in (0, 1, 2):
             raise ube.UBXParseError(
-                f"Invalid message mode {msgmode} - must be 0, 1 or 2"
+                "Invalid message mode " + msgmode + " - must be 0, 1 or 2"
             )
 
         lenm = len(message)
@@ -190,18 +190,17 @@ class UBXReader:
         if validate & VALCKSUM:
             if hdr != ubt.UBX_HDR:
                 raise ube.UBXParseError(
-                    (f"Invalid message header {hdr}" f" - should be {ubt.UBX_HDR}")
+                    ("Invalid message header " + hdr + " - should be " + ubt.UBX_HDR)
                 )
             if leni != UBXMessage.bytes2val(lenb, ubt.U2):
                 raise ube.UBXParseError(
                     (
-                        f"Invalid payload length {lenb}"
-                        f" - should be {UBXMessage.val2bytes(leni, ubt.U2)}"
+                        "Invalid payload length " + lenb + " - should be " + UBXMessage.val2bytes(leni, ubt.U2)
                     )
                 )
             if ckm != ckv:
                 raise ube.UBXParseError(
-                    (f"Message checksum {ckm}" f" invalid - should be {ckv}")
+                    ("Message checksum " + ckm + " invalid - should be " + ckv)
                 )
         try:
             if payload is None:
@@ -210,5 +209,5 @@ class UBXReader:
         except KeyError as err:
             modestr = ["GET", "SET", "POLL"][msgmode]
             raise ube.UBXParseError(
-                (f"Unknown message type clsid {clsid}, msgid {msgid}, mode {modestr}")
+                ("Unknown message type clsid " + clsid + ", msgid " + msgid + ", mode " + modestr)
             ) from err

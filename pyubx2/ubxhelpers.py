@@ -173,7 +173,7 @@ def key_from_val(dictionary: dict, value) -> str:
     for key, val in dictionary.items():
         if val == value:
             return key
-    raise KeyError(f"No key found for value {value}")
+    raise KeyError("No key found for value " + value)
 
 
 def get_bits(bitfield: bytes, bitmask: int) -> int:
